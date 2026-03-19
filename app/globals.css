@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --mirror-bg: #0a0a0a;
+  --mirror-fg: #f5f5f5;
+  --mirror-muted: #8a8a8a;
+  --mirror-accent: #d7b36b;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--mirror-bg);
+  color: var(--mirror-fg);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--mirror-accent) 35%, transparent);
+}
+
