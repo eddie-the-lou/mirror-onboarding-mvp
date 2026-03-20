@@ -4,7 +4,7 @@ import { Button } from '../ui/Button';
 export function FirstAction() {
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mirror-body-sm">
         Two things will build your mirror.
       </p>
       <div className="mt-6 space-y-3">

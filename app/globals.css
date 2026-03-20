@@ -1,10 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --mirror-bg: #0a0a0a;
-  --mirror-fg: #f5f5f5;
-  --mirror-muted: #8a8a8a;
-  --mirror-accent: #d7b36b;
+  --mirror-bg: #050508;
+  --mirror-bg-elevated: #0c0c10;
+  --mirror-fg: #f4f4f5;
+  --mirror-fg-muted: #a1a1aa;
+  --mirror-body: #e4e4e7;
+  --mirror-muted: #9ca3af;
+  --mirror-accent: #e4b363;
+  --mirror-accent-dim: rgba(228, 179, 99, 0.15);
+  --mirror-glass: rgba(255, 255, 255, 0.03);
+  --mirror-glass-border: rgba(255, 255, 255, 0.08);
+  --mirror-glow: 0 0 40px rgba(228, 179, 99, 0.12);
+}
+
+/* Typography */
+.mirror-body {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+  color: var(--mirror-body);
+}
+.mirror-body-sm {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.7;
+  color: var(--mirror-body);
+}
+.mirror-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mirror-fg-muted);
+}
+.mirror-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--mirror-fg);
 }
 
 html,
@@ -15,9 +50,81 @@ body {
 body {
   background: var(--mirror-bg);
   color: var(--mirror-fg);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+}
+
+/* Atmospheric gradient background */
+.mirror-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 90, 60, 0.18), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 50%, rgba(80, 70, 120, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 0% 80%, rgba(100, 80, 60, 0.06), transparent),
+    var(--mirror-bg);
 }
 
 ::selection {
   background: color-mix(in oklab, var(--mirror-accent) 35%, transparent);
 }
 
+/* Smooth focus ring for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--mirror-accent);
+  outline-offset: 2px;
+}
+
+/* Shared input/textarea styling */
+.mirror-input {
+  min-height: 140px;
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid var(--mirror-glass-border);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--mirror-body);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.mirror-input::placeholder {
+  color: var(--mirror-muted);
+}
+.mirror-input:focus {
+  outline: none;
+  border-color: var(--mirror-accent);
+  box-shadow: 0 0 0 3px var(--mirror-accent-dim);
+}
+.mirror-input.min-h-compact {
+  min-height: 110px;
+}
+
+/* Range slider */
+input[type="range"].mirror-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--mirror-glass-border);
+}
+input[type="range"].mirror-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--mirror-accent);
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(228, 179, 99, 0.4);
+  transition: transform 0.15s;
+}
+input[type="range"].mirror-range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+input[type="range"].mirror-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--mirror-accent);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 12px rgba(228, 179, 99, 0.4);
+}

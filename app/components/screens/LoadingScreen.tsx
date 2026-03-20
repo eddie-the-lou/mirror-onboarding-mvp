@@ -30,10 +30,15 @@ export function LoadingScreen({
       <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
         Give me a moment. I&apos;m putting something together for you.
       </p>
-      <p className="mt-3 text-xs text-[color:var(--mirror-muted)]">
+      <p className="mt-4 text-sm text-[color:var(--mirror-fg-muted)]">
         {hint} ({elapsedSec}s)
       </p>
-      <div className="mt-6 h-10 w-full rounded-full bg-[radial-gradient(circle_at_0%_0%,rgba(215,179,107,0.18),transparent_55%)] animate-pulse" />
+      <div className="mt-6 h-2 w-full overflow-hidden rounded-full bg-[var(--mirror-glass-border)]">
+        <div
+          className="h-full rounded-full bg-[color:var(--mirror-accent)] transition-all duration-500 ease-out"
+          style={{ width: `${Math.min(90, 15 + elapsedSec * 8)}%` }}
+        />
+      </div>
       {error ? (
         <div className="mt-6 space-y-4">
           <p className="text-xs leading-relaxed text-[color:var(--mirror-muted)]">{error}</p>

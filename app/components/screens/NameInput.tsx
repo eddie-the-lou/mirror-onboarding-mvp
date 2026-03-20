@@ -25,7 +25,7 @@ export function NameInput({ name, onChange, onNext }: Props) {
 
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mirror-body-sm">
         What should I call you?
       </p>
       <div className="mt-6 space-y-4">

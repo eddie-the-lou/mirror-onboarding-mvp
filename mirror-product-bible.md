@@ -170,7 +170,7 @@ Four text-based exercises testing how the user perceives and interprets the worl
 
 The quick read generates a multidimensional perception profile: how they interpret behavior, how they read subtext, how accurately they track dynamics between others, and what they do when they're under pressure themselves.
 
-**A/B test note:** Exercises 1 and 2 are being tested in two versions. Version A has defensible correct answers (objective scoring). Version B has no correct answers — each choice reveals an interpretation pattern. Exercise 3 is always objective. Exercise 4 is always behavioral style. The test determines whether objective scoring or interpretive profiling produces better insight data and higher user engagement. If objective scoring proves more engaging, daily scenarios will lean toward skill-building with measurable improvement. If interpretive scenarios prove richer, daily scenarios will become reflective situations that lead into brief discussions. Both can coexist — early scenarios may emphasize skill-building, transitioning to interpretive reflections as the user's baseline is established.
+**Exercise design:** Exercises 1 and 2 are interpretive — no correct answers, each choice reveals an interpretation pattern (attribution style, listening orientation). Exercise 3 is objective (defensible correct answer). Exercise 4 reveals behavioral style. The combined reveal is entirely narrative — no score, just a profile of how the user reads the world. Daily scenarios are reflective situations that lead into brief discussions.
 
 ### 5.2 Act 2: The Insight Interview
 
@@ -282,7 +282,7 @@ Below the mirror, minimal indicators — current streak, last conversation times
 
 One scenario per day, designed by the AI, targeting specific patterns the product needs to uncover. The user taps in, reads a situation, responds, and sees signal flow visibly into the relevant fragment. Two to three minutes. This is the backbone of the daily habit.
 
-The format of daily scenarios will be informed by the onboarding A/B test results regarding objective versus interpretive exercises. Regardless of format, daily scenarios serve dual purposes: they generate data that feeds the mirror and they keep the user engaged between conversations.
+Regardless of format, daily scenarios serve dual purposes: they generate data that feeds the mirror and they keep the user engaged between conversations.
 
 #### Scenario Formats
 
@@ -735,12 +735,12 @@ Generates personalized daily scenarios targeting specific fragment dimensions, a
 
 The following documents contain the detailed specifications for building the MVP:
 
-**`mirror-onboarding-spec.md`** — Complete screen-by-screen build specification for the onboarding experience. Every screen, every data field, every branching path, every API call, the data model, and the A/B test configuration. This is what a developer follows to build the MVP.
+**`mirror-onboarding-spec.md`** — Complete screen-by-screen build specification for the onboarding experience. Every screen, every data field, every branching path, every API call, the data model. This is what a developer follows to build the MVP.
 
 **`mirror-system-prompt.md`** — Mirror's core AI system prompt. Defines the voice, psychological frameworks (McAdams + Mayer-Salovey), what to look for in user data, how to generate insights, the insight structure, and rules for what to do and not do. This goes into the system message of every API call.
 
 **`mirror-insight-prompt-template.md`** — The prompt template that takes a user's complete onboarding data and generates the combined reveal (quick read breakdown + integrated insight). Includes the JSON output format, API configuration, handling for thin responses, and handling for user pushback.
 
-**`mirror-quick-read-exercises.md`** — The complete exercise content for both A/B test versions. All scenarios, answer options, correct answers (Version A), interpretation mappings (Version B), reveal copy for every possible user selection, and testing criteria for evaluating exercise quality.
+**`mirror-quick-read-exercises.md`** — The complete exercise content. All scenarios, answer options, interpretation mappings, reveal copy for every possible user selection, and testing criteria for evaluating exercise quality.
 
 **`mirror-testing-framework.md`** — The three-phase testing plan for validating insight quality. Phase 1: prompt testing with simulated profiles. Phase 2: real user testing with evaluation criteria and minimum thresholds. Phase 3: quick read content validation. Includes rating scales, what to look for, and when to iterate versus proceed.

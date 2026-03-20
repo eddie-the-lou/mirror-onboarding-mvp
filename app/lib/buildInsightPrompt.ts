@@ -9,10 +9,10 @@ export function buildInsightPrompt(data: OnboardingData): string {
     'utf-8',
   );
 
-  const ex1 = getExercise(data.abVersion, 1);
-  const ex2 = getExercise(data.abVersion, 2);
-  const ex3 = getExercise(data.abVersion, 3);
-  const ex4 = getExercise(data.abVersion, 4);
+  const ex1 = getExercise(1);
+  const ex2 = getExercise(2);
+  const ex3 = getExercise(3);
+  const ex4 = getExercise(4);
 
   const resolveAnswerLabel = (exercise: { options: Array<{ id: string; label: string }> }, raw: string) => {
     const trimmed = raw.trim();

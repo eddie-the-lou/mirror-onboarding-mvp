@@ -14,6 +14,7 @@ import { ContextSelect } from './components/screens/ContextSelect';
 import { SituationProposal } from './components/screens/SituationProposal';
 import { GuidedExploration } from './components/screens/GuidedExploration';
 import { AutoAdvance } from './components/screens/AutoAdvance';
+import { ProgressBar } from './components/ProgressBar';
 import {
   PATH_A_WHERE_OPTIONS,
   PATH_A_WHAT_OPTIONS,
@@ -157,7 +158,6 @@ function prevApplicableIndex(fromIndex: number, data: OnboardingData): number {
 }
 
 function createInitialData(): OnboardingData {
-  const abVersion: OnboardingData['abVersion'] = Math.random() < 0.5 ? 'A' : 'B';
   return {
     user: {
       name: '',
@@ -166,7 +166,6 @@ function createInitialData(): OnboardingData {
       source: '',
       email: '',
     },
-    abVersion,
     quickRead: {
       exercise1: { answer: '' },
       exercise2: { answer: '' },
@@ -382,6 +381,44 @@ export default function Home() {
 
   const currentScreenId = ONBOARDING_SCREENS[state.index];
 
+  const progress = useMemo(() => {
+    const QUICK_READ_LAST_INDEX = 4; // thesis through exercise4
+    const isQuickReadPhase = state.index <= QUICK_READ_LAST_INDEX;
+
+    if (isQuickReadPhase) {
+      // Bar fills only after each move: exercise1 shows 0%, after ex1→ex2 shows 25%, etc.
+      // completed = screens finished before current (ex1=0, ex2=1, ex3=2, ex4=3)
+      const quickReadCompleted = Math.max(0, state.index - 1);
+      return {
+        phase: 'quickRead' as const,
+        quickReadStep: quickReadCompleted,
+        quickReadTotal: 4,
+        insightStep: 0,
+        insightTotal: 1,
+      };
+    }
+
+    // Insight phase: bar resets to empty, fills after each move
+    // First screen with bar is context1 (index 6); intent at 5 is hidden
+    const insightBarStartIndex = 6;
+    let insightCompleted = 0;
+    let insightTotalCount = 0;
+    for (let i = insightBarStartIndex; i < ONBOARDING_SCREENS.length; i += 1) {
+      if (isScreenApplicable(ONBOARDING_SCREENS[i], state.data)) {
+        insightTotalCount += 1;
+        if (i < state.index) insightCompleted += 1;
+      }
+    }
+
+    return {
+      phase: 'insight' as const,
+      quickReadStep: 4,
+      quickReadTotal: 4,
+      insightStep: insightCompleted,
+      insightTotal: Math.max(1, insightTotalCount),
+    };
+  }, [state.index, state.data]);
+
   const EVIDENCE_THRESHOLD = 0.72;
 
   const runInsight = useCallback(async (dataOverride?: OnboardingData) => {
@@ -534,7 +571,6 @@ export default function Home() {
         return (
           <Exercise
             id={1}
-            version={state.data.abVersion}
             selectedOptionId={state.data.quickRead.exercise1.answer || undefined}
             onSelect={(answer) => dispatch({ type: 'answerExercise', index: 1, answer })}
           />
@@ -543,7 +579,6 @@ export default function Home() {
         return (
           <Exercise
             id={2}
-            version={state.data.abVersion}
             selectedOptionId={state.data.quickRead.exercise2.answer || undefined}
             onSelect={(answer) => dispatch({ type: 'answerExercise', index: 2, answer })}
           />
@@ -552,7 +587,6 @@ export default function Home() {
         return (
           <Exercise
             id={3}
-            version={state.data.abVersion}
             selectedOptionId={state.data.quickRead.exercise3.answer || undefined}
             onSelect={(answer) => dispatch({ type: 'answerExercise', index: 3, answer })}
           />
@@ -561,7 +595,6 @@ export default function Home() {
         return (
           <Exercise
             id={4}
-            version={state.data.abVersion}
             selectedOptionId={state.data.quickRead.exercise4.answer || undefined}
             onSelect={(answer) => dispatch({ type: 'answerExercise', index: 4, answer })}
           />
@@ -1113,7 +1146,7 @@ export default function Home() {
   ]);
 
   return (
-    <main className="min-h-dvh flex items-center justify-center px-6 py-10">
+    <main className="min-h-dvh flex flex-col items-center justify-center px-6 py-10">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentScreenId}
@@ -1123,18 +1156,30 @@ export default function Home() {
           transition={{ duration: 0.28, ease: 'easeOut' }}
           className="w-full max-w-2xl"
         >
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between">
             <button
               type="button"
               aria-label="Back"
               onClick={() => dispatch({ type: 'prev' })}
               disabled={state.index === 0 || loadingInsight}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color-mix(in_oklab,var(--mirror-muted)_60%,transparent)] text-[color:var(--mirror-fg)] transition-colors hover:border-[color:var(--mirror-accent)] hover:text-[color:var(--mirror-accent)] disabled:opacity-30 disabled:hover:border-[color-mix(in_oklab,var(--mirror-muted)_60%,transparent)] disabled:hover:text-[color:var(--mirror-fg)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--mirror-glass-border)] text-[color:var(--mirror-fg)] transition-all duration-200 hover:border-[color:var(--mirror-accent)] hover:bg-[var(--mirror-accent-dim)] hover:text-[color:var(--mirror-accent)] hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:border-[var(--mirror-glass-border)] disabled:hover:bg-transparent disabled:hover:text-[color:var(--mirror-fg)]"
             >
               ←
             </button>
-            <div className="h-10 w-10" />
+            <span className="text-sm font-semibold tracking-[0.2em] text-[color:var(--mirror-fg-muted)]">
+              MIRROR
+            </span>
+            <div className="h-10 w-10" aria-hidden />
           </div>
+          {(currentScreenId !== 'thesis' && currentScreenId !== 'intent') && (
+            <ProgressBar
+              phase={progress.phase}
+              quickReadStep={progress.quickReadStep}
+              quickReadTotal={progress.quickReadTotal}
+              insightStep={progress.insightStep}
+              insightTotal={progress.insightTotal}
+            />
+          )}
           {Screen}
         </motion.div>
       </AnimatePresence>

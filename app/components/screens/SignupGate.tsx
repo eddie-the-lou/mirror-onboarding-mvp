@@ -27,11 +27,11 @@ export function SignupGate({ name, email, onChangeEmail, onSubmit, loading }: Pr
 
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mirror-body-sm">
         I see something{name ? `, ${name}` : ''}. There&apos;s a pattern here — and it connects to
         how you read people in ways you probably haven&apos;t considered.
       </p>
-      <p className="mt-4 text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mt-5 mirror-body-sm">
         To show you what I found, create your account.
       </p>
       <div className="mt-6 space-y-4">

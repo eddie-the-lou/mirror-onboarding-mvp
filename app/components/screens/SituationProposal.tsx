@@ -14,7 +14,7 @@ export function SituationProposal({ prompts, selected, onSelect, onNext }: Props
 
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mirror-body-sm">
         Pick the one that feels closest to your experience.
       </p>
       <div className="mt-6 space-y-3">

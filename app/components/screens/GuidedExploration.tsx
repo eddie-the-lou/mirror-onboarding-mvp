@@ -105,10 +105,10 @@ export function GuidedExploration({ question, value, onChange, placeholder, onSu
 
   return (
     <Card>
-      <p className="mb-4 text-xs text-[color:var(--mirror-muted)]">{question}</p>
+      <p className="mb-5 mirror-heading">{question}</p>
       <textarea
         ref={textareaRef}
-        className="min-h-[140px] w-full rounded-xl border border-[color-mix(in_oklab,var(--mirror-muted)_60%,transparent)] bg-[color:var(--mirror-bg)] px-4 py-3 text-sm text-[color:var(--mirror-fg)] placeholder:text-[color:var(--mirror-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--mirror-accent)]"
+        className="mirror-input"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={
@@ -117,17 +117,17 @@ export function GuidedExploration({ question, value, onChange, placeholder, onSu
         }
       />
       {speechError ? (
-        <p className="mt-2 text-xs text-[color:var(--mirror-muted)]">
+        <p className="mt-3 text-sm text-[color:var(--mirror-fg-muted)]">
           Dictation error: {speechError}. If you’re on desktop Chrome, try again and speak immediately.
         </p>
       ) : null}
       {showNudge && value.trim().length < 50 ? (
-        <p className="mt-2 text-xs text-[color:var(--mirror-muted)]">
+        <p className="mt-3 text-sm font-medium text-[color:var(--mirror-body)]">
           {nudge} Can you tell me a bit more? The more detail you share, the more I can see.
         </p>
       ) : null}
       {submitting ? (
-        <p className="mt-2 text-xs text-[color:var(--mirror-muted)]">Generating next question…</p>
+        <p className="mt-3 text-sm text-[color:var(--mirror-fg-muted)]">Generating next question…</p>
       ) : null}
       <div className="mt-4 flex items-center justify-between gap-3">
         {speechSupported ? (

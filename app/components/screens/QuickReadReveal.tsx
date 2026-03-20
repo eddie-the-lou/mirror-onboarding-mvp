@@ -19,10 +19,10 @@ export function QuickReadReveal({ quickRead, isPlaceholder, onContinue }: Props)
   if (!quickRead) {
     return (
       <Card>
-        <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+        <p className="mirror-heading">
           First — here&apos;s how you read people.
         </p>
-        <p className="mt-4 text-xs text-[color:var(--mirror-muted)]">
+        <p className="mt-4 mirror-body-sm">
           {isPlaceholder
             ? "I’m not connected yet — this is where your quick read breakdown will appear once the insight engine is live."
             : 'No quick read results available.'}
@@ -44,8 +44,8 @@ export function QuickReadReveal({ quickRead, isPlaceholder, onContinue }: Props)
       </p>
 
       <div className="mt-6 rounded-2xl border border-[color-mix(in_oklab,var(--mirror-muted)_60%,transparent)] p-4">
-        <p className="text-xs text-[color:var(--mirror-muted)]">What I based this on</p>
-        <div className="mt-3 space-y-3 text-sm text-[color:var(--mirror-muted)]">
+        <p className="mirror-label">What I based this on</p>
+        <div className="mt-3 space-y-3 mirror-body-sm">
           <p>{quickRead.exercise_1}</p>
           <p>{quickRead.exercise_2}</p>
           <p>{quickRead.exercise_3}</p>

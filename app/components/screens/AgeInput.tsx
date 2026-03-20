@@ -22,7 +22,7 @@ export function AgeInput({ name, age, onChange, onNext }: Props) {
 
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mirror-body-sm">
         How old are you{name ? `, ${name}` : ''}?
       </p>
       <div className="mt-6 space-y-4">

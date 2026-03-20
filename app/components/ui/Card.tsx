@@ -9,15 +9,19 @@ type Props = PropsWithChildren<{
 export function Card({ title, description, className = '', children }: Props) {
   return (
     <section
-      className={`rounded-3xl border border-[color-mix(in_oklab,var(--mirror-muted)_40%,transparent)] bg-[radial-gradient(circle_at_30%_0%,rgba(215,179,107,0.08),rgba(10,10,10,0.92)_45%,rgba(10,10,10,0.88)_100%)] px-8 py-8 shadow-[0_0_60px_rgba(0,0,0,0.8)] ${className}`}
+      className={`rounded-3xl border border-[var(--mirror-glass-border)] bg-[var(--mirror-glass)] px-8 py-8 shadow-[var(--mirror-glow)] backdrop-blur-xl ${className}`}
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 50%, rgba(0,0,0,0.02) 100%)',
+        boxShadow: 'var(--mirror-glow), 0 0 0 1px rgba(255,255,255,0.04) inset',
+      }}
     >
       {title ? (
-        <h1 className="text-lg font-medium leading-relaxed text-[color:var(--mirror-fg)]">
+        <h1 className="text-lg font-semibold leading-relaxed text-[color:var(--mirror-fg)] tracking-tight">
           {title}
         </h1>
       ) : null}
       {description ? (
-        <p className="mt-3 text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+        <p className="mt-3 mirror-body-sm">
           {description}
         </p>
       ) : null}
@@ -25,4 +29,3 @@ export function Card({ title, description, className = '', children }: Props) {
     </section>
   );
 }
-

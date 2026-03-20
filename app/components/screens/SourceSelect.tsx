@@ -20,7 +20,7 @@ export function SourceSelect({ source, onChange, onNext }: Props) {
 
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mirror-heading">
         How did you find Mirror?
       </p>
       <div className="mt-6 space-y-3">

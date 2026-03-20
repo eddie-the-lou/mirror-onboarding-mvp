@@ -6,7 +6,7 @@ This document specifies every screen in the Mirror onboarding experience. It is 
 
 - `mirror-system-prompt.md` — The AI's system prompt
 - `mirror-insight-prompt-template.md` — The prompt template for generating the insight
-- `mirror-quick-read-exercises.md` — The exercise content (A/B test versions)
+- `mirror-quick-read-exercises.md` — The exercise content
 
 ## Technical Requirements
 
@@ -31,9 +31,9 @@ The onboarding collects the following data, which is passed to the insight gener
     exercise_1: {
       scenario_id: string,
       user_answer: string,
-      correct_answer: string,        // Version A only
+      correct_answer?: string,       // Exercise 3 only
       result: "correct" | "incorrect" | "interpretive",
-      interpretation_style: string    // Version B only
+      interpretation_style?: string  // Exercises 1, 2 (interpretive)
     },
     exercise_2: { same structure },
     exercise_3: { same structure },   // Always objective
@@ -180,7 +180,7 @@ First, I'll see how you read other people. Then I'll learn how you see your own 
 
 ### ACT 2: QUICK READ (Screens 8-11)
 
-These screens present the four exercises. Content comes from `mirror-quick-read-exercises.md`. The A/B test version determines whether Exercises 1 and 2 are objective or interpretive. Exercise 3 is always objective. Exercise 4 is always behavioral style.
+These screens present the four exercises. Content comes from `mirror-quick-read-exercises.md` and `app/lib/exercises.ts`. Exercises 1 and 2 are interpretive. Exercise 3 is objective. Exercise 4 is behavioral style.
 
 No feedback or results are shown during this section. All answers are stored silently.
 
@@ -190,19 +190,11 @@ No feedback or results are shown during this section. All answers are stored sil
 
 **Layout:** Scenario text at top, four single-select option buttons below.
 
-**Content:** The Exercise 1 scenario and options from the active A/B test version.
+**Content:** The Exercise 1 scenario and options (interpretive — no correct answer).
 
-**Version A scenario:** "You and a friend are catching up over coffee. They've been telling you in great detail about their weekend — where they went, who they saw, what they ate. You've mostly been listening, giving short responses. Near the end of the conversation, they pause and say: 'Anyway. How are you? You've been quiet the past few days.'"
+**Scenario:** "You're at a small gathering. A friend who's usually talkative and warm greets everyone when they arrive but then spends most of the evening on the edge of conversations — laughing at the right moments, responding when spoken to, but not initiating anything. At one point you catch them staring out the window for a few seconds before someone pulls them back in."
 
-**Version A options:**
-- They're checking in because they genuinely care about you
-- They're worried you're pulling away and this is their way of testing the connection
-- They just like sharing their life and the question at the end is an afterthought
-- They feel guilty about talking about themselves too much
-
-**Version B scenario:** "You're at a small gathering. A friend who's usually talkative and warm greets everyone when they arrive but then spends most of the evening on the edge of conversations — laughing at the right moments, responding when spoken to, but not initiating anything. At one point you catch them staring out the window for a few seconds before someone pulls them back in."
-
-**Version B options:**
+**Options:**
 - They're preoccupied with something unrelated to the gathering — work, a text they got, something on their mind
 - They're feeling disconnected from this group lately and aren't sure they belong anymore
 - They're tired or low-energy and doing their best to be present despite not being fully up for it
@@ -218,17 +210,11 @@ No feedback or results are shown during this section. All answers are stored sil
 
 **Layout:** Same as Screen 8.
 
-**Version A scenario:** "After a disagreement, your partner says: 'Look, I don't want to fight. I just want us to be okay.'"
+**Content:** The Exercise 2 scenario and options (interpretive — no correct answer).
 
-**Version A options:**
-- They're genuinely prioritizing the relationship over winning the argument
-- They want the conflict to end without actually resolving what caused it
-- They're apologizing indirectly without saying sorry
-- They're exhausted and need a break from the conversation
+**Scenario:** "You've been dating someone for a few months. After a night out with your friends — which they didn't come to — they say: 'Sounds like you had a great time.'"
 
-**Version B scenario:** "You've been dating someone for a few months. After a night out with your friends — which they didn't come to — they say: 'Sounds like you had a great time.'"
-
-**Version B options:**
+**Options:**
 - They're genuinely glad you had fun — no subtext
 - They feel left out and are flagging it indirectly
 - They're testing whether you missed them or even noticed they weren't there
@@ -244,7 +230,7 @@ No feedback or results are shown during this section. All answers are stored sil
 
 **Layout:** Text exchange displayed in a chat-bubble or message-thread visual style. Four single-select options below.
 
-**Scenario (same for both A/B versions):**
+**Scenario:**
 ```
 Person A: I've been thinking about what you said
 Person B: Which part?
@@ -272,7 +258,7 @@ Person B: I know. But thank you for saying that.
 
 **Layout:** Same as Screen 8.
 
-**Scenario (same for both A/B versions):** "You're in a group meeting and share an idea. It gets a lukewarm response and the conversation moves on. A few minutes later, someone else brings up essentially the same idea in slightly different words and everyone responds enthusiastically. What's your first instinct?"
+**Scenario:** "You're in a group meeting and share an idea. It gets a lukewarm response and the conversation moves on. A few minutes later, someone else brings up essentially the same idea in slightly different words and everyone responds enthusiastically. What's your first instinct?"
 
 **Options:**
 - Speak up and point out you said the same thing earlier
@@ -852,15 +838,6 @@ Select based on response length and content keywords. Less ideal than API-genera
 
 ---
 
-## A/B Test Configuration
-
-The only difference between Version A and Version B is the content of Screens 8 and 9 (Exercises 1 and 2). Everything else is identical.
-
-**Assignment:** Randomly assign each new user to Version A or Version B at the start of the session. Store the assignment in the data model.
-
-**Tracking:** For each user, record which version they received alongside all other data and reaction ratings. This allows direct comparison of reveal quality between versions.
-
----
 
 ## Situation Prompt Library
 

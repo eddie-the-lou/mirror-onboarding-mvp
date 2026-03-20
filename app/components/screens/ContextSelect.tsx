@@ -15,7 +15,7 @@ export function ContextSelect({ prompt, options, selected, onSelect, onNext }: P
 
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">{prompt}</p>
+      <p className="mirror-body-sm">{prompt}</p>
       <div className="mt-6 space-y-3">
         {options.map((option) => (
           <OptionButton

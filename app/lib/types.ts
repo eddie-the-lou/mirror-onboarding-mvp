@@ -1,4 +1,3 @@
-export type ABVersion = 'A' | 'B';
 export type InterviewPath = 'A' | 'B' | 'C';
 
 export interface OnboardingData {
@@ -9,7 +8,6 @@ export interface OnboardingData {
     source: string;
     email: string;
   };
-  abVersion: ABVersion;
   quickRead: {
     exercise1: { answer: string };
     exercise2: { answer: string };

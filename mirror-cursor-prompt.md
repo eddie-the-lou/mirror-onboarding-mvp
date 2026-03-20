@@ -46,7 +46,6 @@ thesis → exercise_1 → exercise_2 → exercise_3 → exercise_4 → intent_se
 Use React state (useState/useReducer) to manage:
 - Current screen index
 - User data object (accumulates as they progress)
-- A/B test version (randomly assigned on load)
 - Path selection (A, B, C, or D)
 - API response (quick read breakdown + insight)
 
@@ -60,7 +59,6 @@ interface OnboardingData {
     gender: string;
     source: string;
   };
-  abVersion: 'A' | 'B';
   quickRead: {
     exercise1: { answer: string; };
     exercise2: { answer: string; };
@@ -135,7 +133,7 @@ Each exercise screen has:
 
 No feedback is shown. When the user selects an option, briefly highlight their choice (subtle color change), then transition to the next screen after a short delay (300-500ms).
 
-**The exercise content depends on the A/B version.** Reference the file `mirror-quick-read-exercises.md` for the exact scenario text and options for both Version A and Version B. Exercises 3 and 4 are identical across versions.
+**The exercise content** comes from `mirror-quick-read-exercises.md` and `app/lib/exercises.ts`. Exercises 1 and 2 are interpretive (each choice reveals a pattern). Exercise 3 is objective. Exercise 4 reveals behavioral style.
 
 ### Screen 12: Transition + Intent Selection
 Two lines of text:
@@ -340,7 +338,7 @@ These are placeholder endpoints for the MVP.
       /ShareButton.tsx
   /lib
     /types.ts                  — TypeScript interfaces
-    /exercises.ts              — Exercise content for both A/B versions
+    /exercises.ts              — Exercise content
     /paths.ts                  — Interview path content (context options, prompts, questions)
     /buildInsightPrompt.ts     — Constructs the API prompt from user data
   /prompts
@@ -366,7 +364,6 @@ These are placeholder endpoints for the MVP.
 
 7. **Mobile-first.** Most users will be on their phone. Design for mobile viewport first. Touch targets should be generous (min 44px). Text readable without zooming.
 
-8. **A/B assignment:** Random on first load, persisted in state for the session. Determines exercise content for Screens 8-9.
 
 ## Build Order
 

@@ -8,13 +8,13 @@ type Props = PropsWithChildren<
 
 export function Button({ variant = 'primary', children, className = '', ...rest }: Props) {
   const base =
-    'inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--mirror-bg)]';
+    'inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--mirror-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--mirror-bg)]';
 
   const variants: Record<typeof variant, string> = {
     primary:
-      'bg-[color:var(--mirror-accent)] text-[color:var(--mirror-bg)] hover:bg-[color-mix(in_oklab,var(--mirror-accent)_80%,#ffffff)] disabled:opacity-40 disabled:hover:bg-[color:var(--mirror-accent)]',
+      'bg-[color:var(--mirror-accent)] text-[color:var(--mirror-bg)] hover:scale-[1.02] hover:shadow-[0_0_24px_rgba(228,179,99,0.35)] active:scale-[0.98] disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-none',
     ghost:
-      'border border-[color-mix(in_oklab,var(--mirror-muted)_60%,transparent)] text-[color:var(--mirror-fg)] hover:border-[color:var(--mirror-accent)] hover:text-[color:var(--mirror-accent)] disabled:opacity-40',
+      'border border-[var(--mirror-glass-border)] text-[color:var(--mirror-fg)] hover:border-[color:var(--mirror-accent)] hover:bg-[var(--mirror-accent-dim)] hover:text-[color:var(--mirror-accent)] active:scale-[0.98] disabled:opacity-40',
   };
 
   return (
@@ -27,4 +27,3 @@ export function Button({ variant = 'primary', children, className = '', ...rest 
     </button>
   );
 }
-

@@ -57,23 +57,23 @@ export function AccuracyScreen({
 
   return (
     <Card>
-      <p className="text-xs text-[color:var(--mirror-muted)]">Your report</p>
-      <p className="mt-3 text-base leading-relaxed text-[color:var(--mirror-fg)] whitespace-pre-line">
+      <p className="mirror-label">Your report</p>
+      <p className="mt-4 mirror-body whitespace-pre-line">
         {currentInsight}
       </p>
 
       <div className="mt-8">
-        <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+        <p className="mirror-heading">
           How accurate does this feel?
         </p>
         <div className="mt-5">
           <div className="flex items-baseline justify-between">
-            <p className="text-xs text-[color:var(--mirror-muted)]">1</p>
+            <p className="text-sm font-medium text-[color:var(--mirror-fg-muted)]">1</p>
             <p className="text-lg font-medium text-[color:var(--mirror-fg)]">
               {score ?? '—'}
-              <span className="text-xs text-[color:var(--mirror-muted)]">/10</span>
+              <span className="text-sm text-[color:var(--mirror-fg-muted)]">/10</span>
             </p>
-            <p className="text-xs text-[color:var(--mirror-muted)]">10</p>
+            <p className="text-sm font-medium text-[color:var(--mirror-fg-muted)]">10</p>
           </div>
           <input
             type="range"
@@ -82,26 +82,26 @@ export function AccuracyScreen({
             step={1}
             value={score ?? 5}
             onChange={(e) => setScore(Number(e.target.value))}
-            className="mt-3 w-full accent-[color:var(--mirror-accent)]"
+            className="mirror-range mt-3 w-full"
           />
         </div>
-        <p className="mt-4 text-xs text-[color:var(--mirror-muted)]">
+        <p className="mt-5 text-sm text-[color:var(--mirror-body)]">
           This is our first conversation, so it may not be perfect yet. Thankfully, Mirror gets sharper the more you use it and grows with you.
         </p>
 
-        <div className="mt-6 space-y-2">
-          <p className="text-xs text-[color:var(--mirror-muted)]">
+        <div className="mt-6 space-y-3">
+          <p className="mirror-heading">
             What felt right? What felt off? Be concrete.
           </p>
           <textarea
-            className="min-h-[110px] w-full rounded-xl border border-[color-mix(in_oklab,var(--mirror-muted)_60%,transparent)] bg-[color:var(--mirror-bg)] px-4 py-3 text-sm text-[color:var(--mirror-fg)] placeholder:text-[color:var(--mirror-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--mirror-accent)]"
+            className="mirror-input min-h-compact"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="e.g., The part about X is right, but the part about Y misses because…"
           />
 
           {speechError ? (
-            <p className="text-xs text-[color:var(--mirror-muted)]">Dictation error: {speechError}</p>
+            <p className="text-sm text-[color:var(--mirror-fg-muted)]">Dictation error: {speechError}</p>
           ) : null}
 
           <div className="mt-3 flex items-center justify-between gap-3">
@@ -210,12 +210,12 @@ export function AccuracyScreen({
 
       {turns.length ? (
         <div className="mt-8 space-y-3">
-          <p className="text-xs text-[color:var(--mirror-muted)]">Conversation</p>
+          <p className="mirror-label">Conversation</p>
           <div className="space-y-3">
             {turns.map((t, idx) => (
               <p
                 key={idx}
-                className="text-xs leading-relaxed whitespace-pre-line text-[color:var(--mirror-muted)]"
+                className="mirror-body-sm whitespace-pre-line"
               >
                 <span className="text-[color:var(--mirror-fg)]">
                   {t.role === 'you' ? 'You' : 'Mirror'}:

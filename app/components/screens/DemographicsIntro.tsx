@@ -13,12 +13,12 @@ export function DemographicsIntro({ onNext }: Props) {
 
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mirror-body-sm">
         First, some quick basics.
       </p>
       <button
         type="button"
-        className="mt-6 text-xs text-[color:var(--mirror-muted)] underline underline-offset-4"
+        className="mt-6 text-sm font-medium text-[color:var(--mirror-fg-muted)] underline underline-offset-4 hover:text-[color:var(--mirror-accent)] transition-colors"
         onClick={onNext}
       >
         Tap to continue

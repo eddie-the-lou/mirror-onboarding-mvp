@@ -16,11 +16,11 @@ export function IntentSelect({ selectedIntent, selectedPath, onSelect, onNext }:
 
   return (
     <Card>
-      <p className="text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mirror-body-sm">
         Good. I&apos;m getting a read on how you see other people. Now I want to learn how you see
         your own life.
       </p>
-      <p className="mt-4 text-sm leading-relaxed text-[color:var(--mirror-muted)]">
+      <p className="mt-5 mirror-heading">
         What do you want Mirror to help you with?
       </p>
       <div className="mt-6 space-y-3">
