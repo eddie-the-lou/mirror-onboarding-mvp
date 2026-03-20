@@ -29,7 +29,7 @@ The visual identity is premium and minimal. Dark background, light text, subtle 
 - **Accent color:** A subtle warm tone — soft gold, muted amber, or warm white for highlights and interactive elements
 - **Typography:** Clean sans-serif. Inter or similar. Headings can be slightly larger but never shouty. Body text should feel like reading a letter, not a UI.
 - **Spacing:** Generous. Every screen should breathe. Content should be vertically centered or near-centered on the viewport.
-- **Transitions:** Smooth fade or slide transitions between screens. Nothing flashy — just enough motion to feel alive. Use Framer Motion.
+- **Transitions:** Smooth fade or slide transitions between screens (~180ms, subtle 4px movement). Nothing flashy — just enough motion to feel alive. Use Framer Motion.
 - **Buttons:** Minimal. No heavy borders or drop shadows. Text-based or lightly outlined. Single-select option buttons should feel like tapping a choice, not clicking a form element.
 - **Cards (for the reveal):** The quick read breakdown and insight should display on styled cards with subtle background differentiation — slightly lighter than the page background, maybe with a very faint border or glow. These cards need to feel like objects worth screenshotting.
 
@@ -169,26 +169,28 @@ Path B fallback prompts:
 
 **Path C, Screen 15:** Skip the proposal — show a free-text input: "Tell me what's happening — the situation and the hard part — in whatever way feels natural."
 
-**Free-response screens (Screens 16-19):** Each has:
-- A brief acknowledgment line above the question, styled differently (lighter text, slightly italic or different weight) to feel like Mirror speaking. For MVP, use template-based acknowledgments — cycle through: "That's a clear moment.", "I can picture that.", "That detail matters.", "That's specific — good."
-- The question text (generate dynamically based on the user's previous response; keep screen count fixed per path)
-- A large free-text area (textarea, not a single-line input). 4-6 rows visible. Placeholder text modeling expected depth.
-- A continue button that activates when the response has at least 1 character
-
-**Path C has fewer free-response screens** (3 instead of 4). Handle this in the screen flow logic.
+**Insight Chat (replaces Screens 16-19):** A single chat interface for all free-response questions:
+- Chat bubbles: Mirror messages left-aligned, user messages right-aligned
+- First question from situation prompt or path-specific fallback; follow-ups from `/api/next-question` API
+- Bouncing-dot typing indicator while the next question is being generated
+- Template-based acknowledgments (e.g., "That's a clear moment.", "I can picture that.") when user submits
+- Large textarea at bottom with Send button; optional Speak (dictation) button
+- Progress bar hidden during insight chat
 
 ### Screen 20: Loading
 "Give me a moment. I'm putting something together for you."
 
 Show a subtle pulsing animation — not a spinner. Something atmospheric. A gentle glow that pulses, or the text "thinking" with a slow ellipsis. The user should feel like something meaningful is being computed.
 
-Trigger the insight generation API call automatically after the user submits the final free-response screen for their path.
+Trigger the insight generation API call automatically when the insight chat completes (conversation reaches planned turns or API signals sufficient evidence).
 
 ### API Integration
 
-**Endpoint:** POST to `/api/generate-insight` (Next.js API route)
+**Endpoints:**
+- POST to `/api/next-question` — Called after each insight chat response; returns next question, evidence score, shouldContinue. Used to drive the conversation flow.
+- POST to `/api/generate-insight` — Next.js API route for insight generation
 
-The API route should:
+The generate-insight API route should:
 1. Receive the complete onboarding data from the client
 2. Construct the user message using the template from `mirror-insight-prompt-template.md`, populated with the actual data
 3. Call the Anthropic API with:
@@ -321,7 +323,8 @@ These are placeholder endpoints for the MVP.
       /IntentSelect.tsx
       /ContextSelect.tsx       — Reusable for context gathering
       /SituationProposal.tsx
-      /GuidedExploration.tsx   — Reusable for free-response questions
+      /GuidedExploration.tsx   — Path C situation input
+      /InsightChat.tsx         — Chat UI for insight interview (Paths A, B, C)
       /SignupGate.tsx
       /Loading.tsx
       /QuickReadReveal.tsx
@@ -350,7 +353,7 @@ These are placeholder endpoints for the MVP.
 
 ## Key Implementation Notes
 
-1. **Screen transitions should feel smooth.** Use Framer Motion AnimatePresence with a fade or subtle slide. ~300ms timing. Each screen animates in, previous animates out.
+1. **Screen transitions should feel smooth.** Use Framer Motion AnimatePresence with a fade or subtle slide. ~180ms timing. Each screen animates in, previous animates out.
 
 2. **Free-text areas should feel inviting.** Large, comfortable, dark-themed textarea with a subtle border. Auto-focus when screen appears. Placeholder in lighter gray.
 

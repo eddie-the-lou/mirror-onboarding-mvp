@@ -25,23 +25,20 @@ function buildInstruction(path: InterviewPath, stepIndex: number) {
       'No acknowledgment. No summary. No therapy language.',
       'Do not shame or scold the user; do not accuse them of "half-assing" or being dishonest.',
       '1-2 sentences max for the next question.',
-      'Ask for a concrete scene (who/where/what happened, exact words). Encourage detail (ask for 4-8 sentences).',
+      'If the user has given a specific, concrete response, prefer to proceed (high evidenceScore) rather than asking for more. Only ask follow-ups when key evidence is genuinely missing.',
+      'When you do ask, go straight to the question. Avoid "Zoom in...", "Focus on...", "Pick a concrete example..." — just ask. 2-5 sentences from the user is often enough.',
       'Avoid generic questions.',
       'Do NOT make up backstory or assume a "learned" belief; if you offer a hypothesis, phrase it as a question with multiple plausible options.',
       '',
-      'REDIRECT RULE (crucial):',
-      'If evidenceScore < threshold and you are asking another question, do NOT say "I’m tracking..." or "I’m missing...".',
-      'Instead, go straight to the ask using a gentle redirect, e.g.:',
-      '- "Zoom in on one moment..."',
-      '- "Focus on the specific scene..."',
-      '- "Pick a concrete example..."',
-      'Then ask ONE targeted question to fill the biggest missing evidence slot (scene / stakes / internal state / choice point / consequence).',
+      'REDIRECT RULE (when evidence is genuinely thin):',
+      'If evidenceScore < threshold and you are asking another question, do NOT say you are tracking or missing something.',
+      'Ask ONE targeted question to fill the biggest missing evidence slot (scene / internal state / choice point / consequence). Be direct.',
     ].join(' ');
 
   const byPath: Record<InterviewPath, string> = {
-    A: `Path A (patterns): push for specificity, sequence, and self-role. Step ${stepIndex + 1}.`,
-    B: `Path B (relationship): push for their read of the other person, then their own internal state, then the counterfactual. Step ${stepIndex + 1}.`,
-    C: `Path C (situation): push for emotional worst-case, default coping, and the gap. Step ${stepIndex + 1}.`,
+    A: `Path A (patterns): specificity, sequence, and self-role. Step ${stepIndex + 1}.`,
+    B: `Path B (relationship): their read of the other person, then their own internal state, then the counterfactual. Step ${stepIndex + 1}.`,
+    C: `Path C (situation): emotional worst-case, default coping, and the gap. Step ${stepIndex + 1}.`,
   };
 
   return `${base}\n\n${byPath[path]}`;
@@ -82,7 +79,7 @@ A: ${body.lastResponse}
 
 Scoring task:
 - Compute an evidenceScore from 0.0 to 1.0 for whether you have enough concrete evidence to form a useful first insight.
-- Evidence means: at least one specific scene, internal state, a choice point, and a consequence. If any are missing, score should be < ${body.threshold}.
+- Evidence means: a specific moment or scene, plus some sense of internal state (what they felt/thought). A choice point or consequence strengthens the score but is not required. If the user has given a concrete, specific response with real detail, score generously (≥ ${body.threshold}).
 - If this is the last planned turn and evidenceScore < ${body.threshold} AND currentTurn < maxTurns, set shouldContinue=true and ask one more targeted question that fills the biggest missing evidence slot (and obey the REDIRECT RULE).
 - Otherwise set shouldContinue=false.
 

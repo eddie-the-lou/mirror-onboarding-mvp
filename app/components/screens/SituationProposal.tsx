@@ -15,7 +15,7 @@ export function SituationProposal({ prompts, selected, onSelect, onNext }: Props
   return (
     <Card>
       <p className="mirror-body-sm">
-        Pick the one that feels closest to your experience.
+        Choose one of these to answer.
       </p>
       <div className="mt-6 space-y-3">
         {prompts.map((prompt) => (

@@ -13,6 +13,7 @@ import { IntentSelect } from './components/screens/IntentSelect';
 import { ContextSelect } from './components/screens/ContextSelect';
 import { SituationProposal } from './components/screens/SituationProposal';
 import { GuidedExploration } from './components/screens/GuidedExploration';
+import { InsightChat } from './components/screens/InsightChat';
 import { AutoAdvance } from './components/screens/AutoAdvance';
 import { ProgressBar } from './components/ProgressBar';
 import {
@@ -93,20 +94,12 @@ function resetDownstreamData(data: OnboardingData, targetIndex: number): Onboard
       next.interview.freeResponses = [];
       next.interview.dynamicQuestions = [];
       next.interview.draftResponses = [];
-    } else {
-      // Free response truncation based on which free screen we’re on.
-      const freeScreens = ['free1', 'free2', 'free3', 'free4', 'free5', 'free6'] as const;
-      const lastFreeIndexKept = freeScreens.reduce((acc, id, idx) => {
-        if (keepThrough.has(id)) return idx;
-        return acc;
-      }, -1);
-
-      const keepResponses = Math.max(0, lastFreeIndexKept + 1);
-      next.interview.freeResponses = next.interview.freeResponses.slice(0, keepResponses);
-      // dynamicQuestions contains the question used for each step (index) and preloaded next ones.
-      next.interview.dynamicQuestions = next.interview.dynamicQuestions.slice(0, Math.max(0, keepResponses + 1));
-      next.interview.draftResponses = next.interview.draftResponses.slice(0, Math.max(0, keepResponses + 1));
-      next.interview.allowedFreeSteps = Math.min(next.interview.allowedFreeSteps, keepResponses);
+    } else if (!keepThrough.has('insightChat')) {
+      next.interview.freeResponses = [];
+      next.interview.dynamicQuestions = [];
+      next.interview.draftResponses = [];
+      next.interview.allowedFreeSteps =
+        next.interview.path === 'A' || next.interview.path === 'B' ? 4 : next.interview.path ? 3 : 0;
       next.interview.evidenceScore = null;
     }
   }
@@ -131,14 +124,7 @@ function resetDownstreamData(data: OnboardingData, targetIndex: number): Onboard
   return next;
 }
 
-function isScreenApplicable(screenId: string, data: OnboardingData): boolean {
-  const match = /^free(\d+)$/.exec(screenId);
-  if (match) {
-    const n = Number(match[1]);
-    if (!Number.isFinite(n)) return false;
-    return n <= (data.interview.allowedFreeSteps || 0);
-  }
-
+function isScreenApplicable(_screenId: string, _data: OnboardingData): boolean {
   return true;
 }
 
@@ -374,6 +360,7 @@ export default function Home() {
     data: createInitialData(),
   }));
   const [loadingInsight, setLoadingInsight] = useState(false);
+  const [loadingNextQuestion, setLoadingNextQuestion] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [insightStartedAtMs, setInsightStartedAtMs] = useState<number>(() => Date.now());
   const isPlaceholderResults =
@@ -399,8 +386,8 @@ export default function Home() {
     }
 
     // Insight phase: bar resets to empty, fills after each move
-    // First screen with bar is context1 (index 6); intent at 5 is hidden
     const insightBarStartIndex = 6;
+    const insightChatIndex = ONBOARDING_SCREENS.indexOf('insightChat');
     let insightCompleted = 0;
     let insightTotalCount = 0;
     for (let i = insightBarStartIndex; i < ONBOARDING_SCREENS.length; i += 1) {
@@ -408,6 +395,13 @@ export default function Home() {
         insightTotalCount += 1;
         if (i < state.index) insightCompleted += 1;
       }
+    }
+    if (state.index === insightChatIndex) {
+      insightCompleted += state.data.interview.freeResponses.length;
+      insightTotalCount = Math.max(
+        insightTotalCount,
+        3 + (state.data.interview.maxFreeSteps || state.data.interview.allowedFreeSteps || 4)
+      );
     }
 
     return {
@@ -419,7 +413,7 @@ export default function Home() {
     };
   }, [state.index, state.data]);
 
-  const EVIDENCE_THRESHOLD = 0.72;
+  const EVIDENCE_THRESHOLD = 0.62;
 
   const runInsight = useCallback(async (dataOverride?: OnboardingData) => {
     setLoadingInsight(true);
@@ -509,53 +503,6 @@ export default function Home() {
         typeof json?.evidenceScore === 'number' ? Math.max(0, Math.min(1, json.evidenceScore)) : null;
       const shouldContinue = json?.shouldContinue === true;
       return { nextQ, evidenceScore, shouldContinue };
-    };
-
-    const decideContinueOrGenerate = async ({
-      path,
-      stepIndex,
-      question,
-      response,
-    }: {
-      path: NonNullable<OnboardingData['interview']['path']>;
-      stepIndex: number;
-      question: string;
-      response: string;
-    }) => {
-      const isLastPlannedTurn = stepIndex + 1 >= state.data.interview.allowedFreeSteps;
-      const { nextQ, evidenceScore, shouldContinue } = await callNextQuestion({
-        path,
-        stepIndex,
-        lastQuestion: question,
-        lastResponse: response,
-        isLastPlannedTurn,
-      });
-
-      dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-
-      if (
-        isLastPlannedTurn &&
-        shouldContinue &&
-        state.data.interview.allowedFreeSteps < state.data.interview.maxFreeSteps &&
-        nextQ
-      ) {
-        const nextAllowed = state.data.interview.allowedFreeSteps + 1;
-        dispatch({ type: 'setAllowedFreeSteps', value: nextAllowed });
-        dispatch({ type: 'setDynamicQuestion', stepIndex: stepIndex + 1, question: nextQ });
-        dispatch({ type: 'setDraftResponse', stepIndex: stepIndex + 1, value: '' });
-        dispatch({ type: 'next' });
-        return;
-      }
-
-      // Otherwise: generate results now.
-      const nextData: OnboardingData = {
-        ...state.data,
-        interview: {
-          ...state.data.interview,
-          freeResponses: [...state.data.interview.freeResponses, { question, response }],
-        },
-      };
-      await runInsight(nextData);
     };
 
     switch (currentScreenId) {
@@ -771,345 +718,122 @@ export default function Home() {
         }
         return <AutoAdvance onNext={() => dispatch({ type: 'next' })} />;
       }
-      case 'free1': {
+      case 'insightChat': {
         const path = state.data.interview.path;
         if (!path) return null;
-        if (path === 'A') {
-          const prompt =
-            state.data.interview.dynamicQuestions[0] ||
-            state.data.interview.situationPromptSelected ||
-            'Tell me about the moment this pattern showed up most clearly. What happened, and what changed inside you?';
-          const question = withDetailLine(prompt);
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[0] ?? state.data.interview.freeResponses[0]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 0, value })}
-              onSubmit={async (response) => {
-                dispatch({ type: 'addFreeResponse', question, response });
-                // Always preload the next question.
-                dispatch({ type: 'setDraftResponse', stepIndex: 1, value: '' });
-                try {
-                  const { nextQ, evidenceScore } = await callNextQuestion({
-                    path,
-                    stepIndex: 0,
-                    lastQuestion: question,
-                    lastResponse: response,
-                    isLastPlannedTurn: false,
-                  });
-                  dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-                  if (nextQ) dispatch({ type: 'setDynamicQuestion', stepIndex: 1, question: nextQ });
-                } finally {
-                  dispatch({ type: 'next' });
-                }
-              }}
-            />
-          );
-        }
-        if (path === 'B') {
-          const prompt =
-            state.data.interview.dynamicQuestions[0] ||
-            state.data.interview.situationPromptSelected ||
-            'Set the scene for me. Where were you, what was happening on the surface, and what was happening underneath?';
-          const question = withDetailLine(prompt);
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[0] ?? state.data.interview.freeResponses[0]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 0, value })}
-              onSubmit={async (response) => {
-                dispatch({ type: 'addFreeResponse', question, response });
-                dispatch({ type: 'setDraftResponse', stepIndex: 1, value: '' });
-                try {
-                  const { nextQ, evidenceScore } = await callNextQuestion({
-                    path,
-                    stepIndex: 0,
-                    lastQuestion: question,
-                    lastResponse: response,
-                    isLastPlannedTurn: false,
-                  });
-                  dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-                  if (nextQ) dispatch({ type: 'setDynamicQuestion', stepIndex: 1, question: nextQ });
-                } finally {
-                  dispatch({ type: 'next' });
-                }
-              }}
-            />
-          );
-        }
-        if (path === 'C') {
-          const question =
-            state.data.interview.dynamicQuestions[1] ||
-            "What's the outcome you're most afraid of here? Not the practical worst case — the emotional worst case.";
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[1] ?? state.data.interview.freeResponses[1]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 1, value })}
-              onSubmit={async (response) => {
-                dispatch({ type: 'addFreeResponse', question, response });
-                dispatch({ type: 'setDraftResponse', stepIndex: 2, value: '' });
-                try {
-                  const { nextQ, evidenceScore } = await callNextQuestion({
-                    path,
-                    stepIndex: 1,
-                    lastQuestion: question,
-                    lastResponse: response,
-                    isLastPlannedTurn: false,
-                  });
-                  dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-                  if (nextQ) dispatch({ type: 'setDynamicQuestion', stepIndex: 2, question: nextQ });
-                } finally {
-                  dispatch({ type: 'next' });
-                }
-              }}
-            />
-          );
-        }
-        return null;
-      }
-      case 'free2': {
-        const path = state.data.interview.path;
-        if (!path) return null;
-        if (path === 'A') {
-          const question =
-            state.data.interview.dynamicQuestions[1] ||
-            'When you noticed that shift — what did you actually do? Not what you wish you\'d done. What happened next?';
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[1] ?? state.data.interview.freeResponses[1]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 1, value })}
-              onSubmit={async (response) => {
-                dispatch({ type: 'addFreeResponse', question, response });
-                dispatch({ type: 'setDraftResponse', stepIndex: 2, value: '' });
-                try {
-                  const { nextQ, evidenceScore } = await callNextQuestion({
-                    path,
-                    stepIndex: 1,
-                    lastQuestion: question,
-                    lastResponse: response,
-                    isLastPlannedTurn: false,
-                  });
-                  dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-                  if (nextQ) dispatch({ type: 'setDynamicQuestion', stepIndex: 2, question: nextQ });
-                } finally {
-                  dispatch({ type: 'next' });
-                }
-              }}
-            />
-          );
-        }
-        if (path === 'B') {
-          const question =
-            state.data.interview.dynamicQuestions[1] ||
-            "What do you think they were feeling in that moment? And what makes you think that — what were the signals?";
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[1] ?? state.data.interview.freeResponses[1]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 1, value })}
-              onSubmit={async (response) => {
-                dispatch({ type: 'addFreeResponse', question, response });
-                dispatch({ type: 'setDraftResponse', stepIndex: 2, value: '' });
-                try {
-                  const { nextQ, evidenceScore } = await callNextQuestion({
-                    path,
-                    stepIndex: 1,
-                    lastQuestion: question,
-                    lastResponse: response,
-                    isLastPlannedTurn: false,
-                  });
-                  dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-                  if (nextQ) dispatch({ type: 'setDynamicQuestion', stepIndex: 2, question: nextQ });
-                } finally {
-                  dispatch({ type: 'next' });
-                }
-              }}
-            />
-          );
-        }
-        if (path === 'C') {
-          const question =
-            state.data.interview.dynamicQuestions[2] ||
-            'And what would you normally do in a situation like this? Not the ideal response — your actual default when you\'re under this kind of pressure.';
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[2] ?? state.data.interview.freeResponses[2]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 2, value })}
-              onSubmit={async (response) => {
-                dispatch({ type: 'addFreeResponse', question, response });
-                dispatch({ type: 'setDraftResponse', stepIndex: 3, value: '' });
-                try {
-                  const { nextQ, evidenceScore } = await callNextQuestion({
-                    path,
-                    stepIndex: 2,
-                    lastQuestion: question,
-                    lastResponse: response,
-                    isLastPlannedTurn: false,
-                  });
-                  dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-                  if (nextQ) dispatch({ type: 'setDynamicQuestion', stepIndex: 3, question: nextQ });
-                } finally {
-                  dispatch({ type: 'next' });
-                }
-              }}
-            />
-          );
-        }
-        return null;
-      }
-      case 'free3': {
-        const path = state.data.interview.path;
-        if (!path) return null;
-        if (path === 'A') {
-          const question =
-            state.data.interview.dynamicQuestions[2] ||
-            'Has that exact sequence — the shift, followed by what you just described — happened before? In a different relationship or a completely different situation?';
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[2] ?? state.data.interview.freeResponses[2]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 2, value })}
-              onSubmit={async (response) => {
-                dispatch({ type: 'addFreeResponse', question, response });
-                dispatch({ type: 'setDraftResponse', stepIndex: 3, value: '' });
-                try {
-                  const { nextQ, evidenceScore } = await callNextQuestion({
-                    path,
-                    stepIndex: 2,
-                    lastQuestion: question,
-                    lastResponse: response,
-                    isLastPlannedTurn: false,
-                  });
-                  dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-                  if (nextQ) dispatch({ type: 'setDynamicQuestion', stepIndex: 3, question: nextQ });
-                } finally {
-                  dispatch({ type: 'next' });
-                }
-              }}
-            />
-          );
-        }
-        if (path === 'B') {
-          const question =
-            state.data.interview.dynamicQuestions[2] ||
-            'Now — what were you feeling? Not what you thought about their feelings. What was going on inside you, separately?';
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[2] ?? state.data.interview.freeResponses[2]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 2, value })}
-              onSubmit={async (response) => {
-                dispatch({ type: 'addFreeResponse', question, response });
-                dispatch({ type: 'setDraftResponse', stepIndex: 3, value: '' });
-                try {
-                  const { nextQ, evidenceScore } = await callNextQuestion({
-                    path,
-                    stepIndex: 2,
-                    lastQuestion: question,
-                    lastResponse: response,
-                    isLastPlannedTurn: false,
-                  });
-                  dispatch({ type: 'setEvidenceScore', value: evidenceScore });
-                  if (nextQ) dispatch({ type: 'setDynamicQuestion', stepIndex: 3, question: nextQ });
-                } finally {
-                  dispatch({ type: 'next' });
-                }
-              }}
-            />
-          );
-        }
-        if (path === 'C') {
-          const question =
-            state.data.interview.dynamicQuestions[3] ||
-            "What's the gap between those two things — what you'd default to and what you wish you'd do instead? What gets in the way?";
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[3] ?? state.data.interview.freeResponses[3]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 3, value })}
-              onSubmit={async (response) => {
-                await decideContinueOrGenerate({ path, stepIndex: 3, question, response });
-              }}
-            />
-          );
-        }
-        return <AutoAdvance onNext={() => dispatch({ type: 'next' })} />;
-      }
-      case 'free4': {
-        const path = state.data.interview.path;
-        if (!path) return null;
-        if (path === 'A') {
-          const question =
-            state.data.interview.dynamicQuestions[3] ||
-            "Last question. When you imagine someone who really knows you hearing this story — what part would they say you're leaving out or downplaying?";
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[3] ?? state.data.interview.freeResponses[3]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 3, value })}
-              onSubmit={async (response) => {
-                await decideContinueOrGenerate({ path, stepIndex: 3, question, response });
-              }}
-            />
-          );
-        }
-        if (path === 'B') {
-          const question =
-            state.data.interview.dynamicQuestions[3] ||
-            'If you had said something in that moment — named what was happening — what do you think would have happened? Walk me through what you imagine.';
-          return (
-            <GuidedExploration
-              question={question}
-              value={state.data.interview.draftResponses[3] ?? state.data.interview.freeResponses[3]?.response ?? ''}
-              onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex: 3, value })}
-              onSubmit={async (response) => {
-                await decideContinueOrGenerate({ path, stepIndex: 3, question, response });
-              }}
-            />
-          );
-        }
-        return <AutoAdvance onNext={() => dispatch({ type: 'next' })} />;
-      }
-      case 'free5': {
-        const path = state.data.interview.path;
-        if (!path) return null;
-        const stepIndex = 4;
-        const fallback =
-          path === 'B'
-            ? "One more concrete moment. What did you *not* say or do — and why?"
-            : path === 'C'
-            ? "Give me one specific moment this week where this showed up. What happened, and what did you do next?"
-            : "One more specific example. What happened, and what was your role in it?";
-        const question = state.data.interview.dynamicQuestions[4] || withDetailLine(fallback);
-        return (
-          <GuidedExploration
-            question={question}
-            value={state.data.interview.draftResponses[4] ?? state.data.interview.freeResponses[4]?.response ?? ''}
-            onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex, value })}
-            onSubmit={async (response) => {
-              await decideContinueOrGenerate({ path, stepIndex, question, response });
-            }}
-          />
+
+        const stepIndex = state.data.interview.freeResponses.length;
+        const messages: Array<{ role: 'mirror' | 'user'; text: string }> = state.data.interview.freeResponses.flatMap(
+          (fr) => [
+            { role: 'mirror' as const, text: fr.question },
+            { role: 'user' as const, text: fr.response },
+          ]
         );
-      }
-      case 'free6': {
-        const path = state.data.interview.path;
-        if (!path) return null;
-        const stepIndex = 5;
-        const fallback =
-          "Last one. If someone who knows you well heard what you've said, what would they say you're missing or downplaying?";
-        const question = state.data.interview.dynamicQuestions[5] || withDetailLine(fallback);
+
+        const getCurrentQuestion = (): string => {
+          const dq = state.data.interview.dynamicQuestions[stepIndex];
+          if (dq) return dq;
+          if (path === 'A') {
+            if (stepIndex === 0)
+              return withDetailLine(
+                state.data.interview.situationPromptSelected ||
+                  'Tell me about the moment this pattern showed up most clearly. What happened, and what changed inside you?'
+              );
+            const fallbacks = [
+              "When you noticed that shift — what did you actually do? Not what you wish you'd done. What happened next?",
+              'Has that exact sequence — the shift, followed by what you just described — happened before? In a different relationship or a completely different situation?',
+              "Last question. When you imagine someone who really knows you hearing this story — what part would they say you're leaving out or downplaying?",
+              withDetailLine("One more specific example. What happened, and what was your role in it?"),
+              withDetailLine("Last one. If someone who knows you well heard what you've said, what would they say you're missing or downplaying?"),
+            ];
+            return fallbacks[Math.min(stepIndex - 1, fallbacks.length - 1)] ?? '';
+          }
+          if (path === 'B') {
+            if (stepIndex === 0)
+              return withDetailLine(
+                state.data.interview.situationPromptSelected ||
+                  "Set the scene for me. Where were you, what was happening on the surface, and what was happening underneath?"
+              );
+            const fallbacks = [
+              "What do you think they were feeling in that moment? And what makes you think that — what were the signals?",
+              "Now — what were you feeling? Not what you thought about their feelings. What was going on inside you, separately?",
+              'If you had said something in that moment — named what was happening — what do you think would have happened? Walk me through what you imagine.',
+              withDetailLine("One more concrete moment. What did you *not* say or do — and why?"),
+            ];
+            return fallbacks[Math.min(stepIndex - 1, fallbacks.length - 1)] ?? '';
+          }
+          if (path === 'C') {
+            const fallbacks = [
+              "What's the outcome you're most afraid of here? Not the practical worst case — the emotional worst case.",
+              "And what would you normally do in a situation like this? Not the ideal response — your actual default when you're under this kind of pressure.",
+              "What's the gap between those two things — what you'd default to and what you wish you'd do instead? What gets in the way?",
+              withDetailLine("Give me one specific moment this week where this showed up. What happened, and what did you do next?"),
+              withDetailLine("Last one. If someone who knows you well heard what you've said, what would they say you're missing or downplaying?"),
+            ];
+            return fallbacks[Math.min(stepIndex, fallbacks.length - 1)] ?? '';
+          }
+          return '';
+        };
+
+        const currentQuestion = getCurrentQuestion();
+        const draft = state.data.interview.draftResponses[stepIndex] ?? '';
+
+        const handleSubmit = async (response: string) => {
+          dispatch({ type: 'addFreeResponse', question: currentQuestion, response });
+          dispatch({ type: 'setDraftResponse', stepIndex: stepIndex + 1, value: '' });
+          setLoadingNextQuestion(true);
+          try {
+            const isLastPlannedTurn = stepIndex + 1 >= state.data.interview.allowedFreeSteps;
+            const { nextQ, evidenceScore, shouldContinue } = await callNextQuestion({
+              path,
+              stepIndex,
+              lastQuestion: currentQuestion,
+              lastResponse: response,
+              isLastPlannedTurn,
+            });
+            dispatch({ type: 'setEvidenceScore', value: evidenceScore });
+
+            // Not yet at planned turns — always get next question and continue
+            if (!isLastPlannedTurn && nextQ) {
+              dispatch({ type: 'setDynamicQuestion', stepIndex: stepIndex + 1, question: nextQ });
+              return;
+            }
+
+            // At last planned turn but API says we need more — extend if possible
+            if (
+              isLastPlannedTurn &&
+              shouldContinue &&
+              state.data.interview.allowedFreeSteps < state.data.interview.maxFreeSteps &&
+              nextQ
+            ) {
+              dispatch({ type: 'setAllowedFreeSteps', value: state.data.interview.allowedFreeSteps + 1 });
+              dispatch({ type: 'setDynamicQuestion', stepIndex: stepIndex + 1, question: nextQ });
+              return;
+            }
+
+            // Done — generate insight
+            const nextData: OnboardingData = {
+              ...state.data,
+              interview: {
+                ...state.data.interview,
+                freeResponses: [...state.data.interview.freeResponses, { question: currentQuestion, response }],
+              },
+            };
+            await runInsight(nextData);
+          } finally {
+            setLoadingNextQuestion(false);
+          }
+        };
+
         return (
-          <GuidedExploration
-            question={question}
-            value={state.data.interview.draftResponses[5] ?? state.data.interview.freeResponses[5]?.response ?? ''}
-            onChange={(value) => dispatch({ type: 'setDraftResponse', stepIndex, value })}
-            onSubmit={async (response) => {
-              await decideContinueOrGenerate({ path, stepIndex, question, response });
-            }}
+          <InsightChat
+            messages={messages}
+            currentQuestion={currentQuestion}
+            draft={draft}
+            onDraftChange={(v) => dispatch({ type: 'setDraftResponse', stepIndex, value: v })}
+            onSubmit={handleSubmit}
+            loading={loadingNextQuestion || loadingInsight}
+            placeholder="e.g., We were at dinner and I noticed they got quiet after I mentioned something about the future..."
           />
         );
       }
@@ -1140,6 +864,8 @@ export default function Home() {
     currentScreenId,
     isPlaceholderResults,
     loadError,
+    loadingInsight,
+    loadingNextQuestion,
     runInsight,
     state.data,
     insightStartedAtMs,
@@ -1150,10 +876,10 @@ export default function Home() {
       <AnimatePresence mode="wait">
         <motion.div
           key={currentScreenId}
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.28, ease: 'easeOut' }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
           className="w-full max-w-2xl"
         >
           <div className="mb-4 flex items-center justify-between">
@@ -1171,7 +897,7 @@ export default function Home() {
             </span>
             <div className="h-10 w-10" aria-hidden />
           </div>
-          {(currentScreenId !== 'thesis' && currentScreenId !== 'intent') && (
+          {!['thesis', 'intent', 'insightChat', 'loading', 'quickReadReveal', 'reaction'].includes(currentScreenId) && (
             <ProgressBar
               phase={progress.phase}
               quickReadStep={progress.quickReadStep}

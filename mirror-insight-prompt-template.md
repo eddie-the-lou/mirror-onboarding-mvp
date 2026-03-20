@@ -1,5 +1,7 @@
 # Mirror — Insight Generation Prompt Template
 
+**Deprecated:** The canonical template used by the app is at `prompts/mirror-insight-prompt-template.md`. This file is kept for reference.
+
 This template is used after the user completes onboarding. It passes all collected data to the AI along with the system prompt and asks for two outputs: the quick read breakdown and the integrated insight.
 
 ---

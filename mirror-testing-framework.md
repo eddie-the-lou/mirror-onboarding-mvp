@@ -10,6 +10,8 @@ Everything else — retention, virality, business model — depends on this. If 
 
 Before putting the onboarding in front of real users, test the system prompt and insight generation with simulated inputs.
 
+**Note:** The insight interview uses `/api/next-question` with an evidence threshold (0.62) to decide when to continue the conversation vs. generate the insight. When testing, the simulated free responses will determine how many turns the interview takes before insight generation.
+
 ### How to Run Prompt Tests
 
 1. Open the API playground or a simple script that calls the API
